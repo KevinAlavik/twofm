@@ -7,7 +7,7 @@ SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BIN_DIR)/%.o,$(SRCS))
 
 CXX := g++
-CXXFLAGS := -std=c++17 -O2 -Wall -Wextra
+CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -Wunused-parameter
 LDFLAGS := -framework CoreAudio -framework CoreFoundation -framework AudioToolbox
 
 LOGGER = @echo "[$(notdir $<)]"

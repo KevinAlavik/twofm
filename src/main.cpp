@@ -33,14 +33,12 @@ public:
         audioFormat.mBytesPerFrame = sizeof(int16_t) * numChannels;
         audioFormat.mBytesPerPacket = audioFormat.mBytesPerFrame * audioFormat.mFramesPerPacket;
 
-        // Create audio queue
         OSStatus status = AudioQueueNewOutput(&audioFormat, callback, this, nullptr, nullptr, 0, &audioQueue);
         if (status != noErr) {
             std::cerr << "Error: Unable to create audio queue\n";
             return;
         }
 
-        // Allocate and enqueue buffers
         for (int i = 0; i < 3; ++i) {
             AudioQueueAllocateBuffer(audioQueue, sizeof(int16_t) * audioData.size(), &audioBuffer);
             memcpy(audioBuffer->mAudioData, audioData.data(), sizeof(int16_t) * audioData.size());
@@ -48,22 +46,16 @@ public:
             AudioQueueEnqueueBuffer(audioQueue, audioBuffer, 0, nullptr);
         }
 
-        // Start audio queue
         AudioQueueStart(audioQueue, nullptr);
 
-        // Run the loop to keep the program alive while audio is playing
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, 10, false);
 
-        // Cleanup
         AudioQueueFlush(audioQueue);
         AudioQueueDispose(audioQueue, true);
     }
 
 private:
-    static void callback(void* userData, AudioQueueRef, AudioQueueBufferRef) {
-        // This callback is necessary for the audio queue to work
-    }
-
+    static void callback(void* userData, AudioQueueRef, AudioQueueBufferRef) {}
     void loadWavFile(const std::string& fileName) {
         std::ifstream file(fileName, std::ios::binary);
 
@@ -72,21 +64,17 @@ private:
             return;
         }
 
-        // Read WAV file header
         char header[44];
         file.read(header, sizeof(header));
 
-        // Check if the file is a valid WAV file
         if (header[0] != 'R' || header[1] != 'I' || header[2] != 'F' || header[3] != 'F') {
             std::cerr << "Error: Not a valid WAV file\n";
             return;
         }
 
-        // Extract sample rate and number of channels from the header
         sampleRate = *reinterpret_cast<uint32_t*>(header + 24);
         numChannels = *reinterpret_cast<uint16_t*>(header + 22);
 
-        // Read audio data
         const size_t dataSize = *reinterpret_cast<uint32_t*>(header + 40);
         audioData.resize(dataSize / sizeof(int16_t));
 
@@ -96,11 +84,14 @@ private:
     }
 };
 
-int main() {
-    // Create an instance of WavPlayer
-    WavPlayer player("song.wav");
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        printf("Usage: %s <wav file>\n", argv[0]);
+        return 1;
+    }
 
-    // Play the audio
+    WavPlayer player(argv[1]);
+
     player.play();
 
     return 0;
